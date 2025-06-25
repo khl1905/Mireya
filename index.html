@@ -2,58 +2,121 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Cuadros con Meta Global y Opción Doble</title>
+  <title>Gestión de Metas</title>
   <style>
     body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      background: #0e0e0e;
+      color: #eee;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
       padding: 20px;
     }
-    input[type="number"] {
-      width: 50px;
-      margin: 2px;
-      font-size: 14px;
+    h2[contenteditable] {
+      text-align: center;
+      margin-bottom: 20px;
+      outline: none;
+      border-bottom: 2px dashed #555;
+      display: inline-block;
+      padding: 5px 10px;
+      cursor: text;
     }
-    .cuadro {
+    #acciones {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #metaGlobal {
+      padding: 8px;
+      width: 80px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #444;
       background: #222;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 10px;
+      color: white;
+      text-align: center;
     }
-    .cuadro.doble {
-      border: 2px solid #00f;
+    #borrarTodo {
+      padding: 8px 16px;
+      font-size: 14px;
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      transition: background 0.3s;
     }
-    .faltante {
-      font-size: 13px;
-      margin-top: 5px;
+    #borrarTodo:hover {
+      background: #ff1a1a;
     }
-    .ok {
-      color: lightgreen;
-    }
+
     table {
       margin: auto;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 15px;
     }
     td {
-      padding: 10px;
-      vertical-align: top;
+      padding: 0;
     }
+
+    .cuadro {
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 12px;
+      width: 230px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    .cuadro.doble {
+      border: 2px solid #3a8fff;
+      box-shadow: 0 0 12px #3a8fff55;
+    }
+
     .doble-toggle {
-      font-size: 12px;
+      font-size: 13px;
+      margin-bottom: 10px;
       display: block;
-      margin-bottom: 6px;
+      color: #aaa;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .cuadro input[type="number"] {
+      width: 100%;
+      padding: 4px;
+      font-size: 14px;
+      background: #2b2b2b;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .faltante {
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+    }
+    .faltante.ok {
+      color: #00e676;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <h2 style="text-align: center;">20 Cuadros con Meta Global y Activación Manual de "Doble"</h2>
+  <h2 id="tituloEditable" contenteditable="true">Meta</h2>
 
-  <div style="text-align:center; margin-bottom: 20px;">
-    <label>Meta global por cuadro: 
+  <div id="acciones">
+    <label>Meta global por cuadro:
       <input type="number" id="metaGlobal" value="100" />
     </label>
+    <button id="borrarTodo">🗑️ Borrar todo</button>
   </div>
 
   <table>
@@ -65,52 +128,92 @@
     const columnas = 4;
     const grid = document.getElementById('grid');
     const metaGlobalInput = document.getElementById('metaGlobal');
+    const borrarBtn = document.getElementById('borrarTodo');
+    const tituloEditable = document.getElementById('tituloEditable');
 
-    function crearCuadro() {
+    // Guardar y restaurar título editable
+    const tituloGuardado = localStorage.getItem('tituloPrincipal');
+    if (tituloGuardado) {
+      tituloEditable.textContent = tituloGuardado;
+    }
+
+    tituloEditable.addEventListener('input', () => {
+      localStorage.setItem('tituloPrincipal', tituloEditable.textContent);
+    });
+
+    function getStorageKey(cuadroIndex, inputIndex = null) {
+      return inputIndex !== null
+        ? `cuadro_${cuadroIndex}_input_${inputIndex}`
+        : `cuadro_${cuadroIndex}_doble`;
+    }
+
+    function guardarEstado() {
+      localStorage.setItem('metaGlobal', metaGlobalInput.value);
+    }
+
+    metaGlobalInput.addEventListener('input', () => {
+      guardarEstado();
+      actualizarTodos();
+    });
+
+    borrarBtn.addEventListener('click', () => {
+      if (confirm("¿Seguro que quieres borrar todos los datos?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    });
+
+    function crearCuadro(index) {
       const contenedor = document.createElement('div');
       contenedor.className = 'cuadro';
-      contenedor.dataset.doble = '1';
 
-      // Checkbox para activar doble
+      // Checkbox doble
       const toggleDoble = document.createElement('label');
       toggleDoble.className = 'doble-toggle';
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       toggleDoble.appendChild(checkbox);
-      toggleDoble.appendChild(document.createTextNode('Doble meta'));
-
+      toggleDoble.appendChild(document.createTextNode(' Doble meta'));
       contenedor.appendChild(toggleDoble);
 
-      // Campos de cantidad
-      const cantidadInputs = [];
-      for (let k = 0; k < 5; k++) {
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.value = 0;
-        cantidadInputs.push(input);
-        contenedor.appendChild(input);
+      if (localStorage.getItem(getStorageKey(index)) === 'true') {
+        checkbox.checked = true;
+        contenedor.classList.add('doble');
       }
 
-      // Texto resultado
+      // Inputs
+      const inputGrid = document.createElement('div');
+      inputGrid.className = 'input-grid';
+
+      const cantidadInputs = [];
+      for (let k = 0; k < 12; k++) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = localStorage.getItem(getStorageKey(index, k)) || 0;
+        cantidadInputs.push(input);
+        inputGrid.appendChild(input);
+      }
+      contenedor.appendChild(inputGrid);
+
+      // Texto faltante
       const faltanteText = document.createElement('div');
       faltanteText.className = 'faltante';
       contenedor.appendChild(faltanteText);
 
       function actualizar() {
         const factor = checkbox.checked ? 2 : 1;
-        contenedor.dataset.doble = factor;
         contenedor.classList.toggle('doble', checkbox.checked);
+        localStorage.setItem(getStorageKey(index), checkbox.checked);
 
         const metaGlobal = parseFloat(metaGlobalInput.value) || 0;
         const metaLocal = metaGlobal * factor;
 
         let suma = 0;
-        for (let input of cantidadInputs) {
-          let val = parseFloat(input.value) || 0;
+        for (let i = 0; i < cantidadInputs.length; i++) {
+          let val = parseFloat(cantidadInputs[i].value) || 0;
           suma += val;
         }
 
-        // Limitar si excede
         if (suma > metaLocal) {
           let exceso = suma - metaLocal;
           for (let i = cantidadInputs.length - 1; i >= 0; i--) {
@@ -126,6 +229,10 @@
           return actualizar();
         }
 
+        for (let i = 0; i < cantidadInputs.length; i++) {
+          localStorage.setItem(getStorageKey(index, i), cantidadInputs[i].value);
+        }
+
         const faltan = metaLocal - suma;
         if (faltan === 0) {
           faltanteText.textContent = '¡Meta alcanzada!';
@@ -136,26 +243,42 @@
         }
       }
 
-      // Eventos
       checkbox.addEventListener('change', actualizar);
-      metaGlobalInput.addEventListener('input', actualizar);
       cantidadInputs.forEach(inp => inp.addEventListener('input', actualizar));
+      metaGlobalInput.addEventListener('input', actualizar);
 
       actualizar();
       return contenedor;
     }
 
-    // Generar 20 cuadros (4x5)
+    function actualizarTodos() {
+      document.querySelectorAll('.cuadro').forEach((cuadro, index) => {
+        const inputs = cuadro.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+          const event = new Event('input');
+          input.dispatchEvent(event);
+        });
+      });
+    }
+
     for (let i = 0; i < filas; i++) {
       const tr = document.createElement('tr');
       for (let j = 0; j < columnas; j++) {
         const td = document.createElement('td');
-        const cuadro = crearCuadro();
+        const index = i * columnas + j;
+        const cuadro = crearCuadro(index);
         td.appendChild(cuadro);
         tr.appendChild(td);
       }
       grid.appendChild(tr);
     }
+
+    const savedMeta = localStorage.getItem('metaGlobal');
+    if (savedMeta) {
+      metaGlobalInput.value = savedMeta;
+    }
+
+    actualizarTodos();
   </script>
 
 </body>
