@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cuadros con Meta Global y Opción Doble</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input[type="number"] {
+      width: 50px;
+      margin: 2px;
+      font-size: 14px;
+    }
+    .cuadro {
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .cuadro.doble {
+      border: 2px solid #00f;
+    }
+    .faltante {
+      font-size: 13px;
+      margin-top: 5px;
+    }
+    .ok {
+      color: lightgreen;
+    }
+    table {
+      margin: auto;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 10px;
+      vertical-align: top;
+    }
+    .doble-toggle {
+      font-size: 12px;
+      display: block;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="text-align: center;">20 Cuadros con Meta Global y Activación Manual de "Doble"</h2>
+
+  <div style="text-align:center; margin-bottom: 20px;">
+    <label>Meta global por cuadro: 
+      <input type="number" id="metaGlobal" value="100" />
+    </label>
+  </div>
+
+  <table>
+    <tbody id="grid"></tbody>
+  </table>
+
+  <script>
+    const filas = 5;
+    const columnas = 4;
+    const grid = document.getElementById('grid');
+    const metaGlobalInput = document.getElementById('metaGlobal');
+
+    function crearCuadro() {
+      const contenedor = document.createElement('div');
+      contenedor.className = 'cuadro';
+      contenedor.dataset.doble = '1';
+
+      // Checkbox para activar doble
+      const toggleDoble = document.createElement('label');
+      toggleDoble.className = 'doble-toggle';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      toggleDoble.appendChild(checkbox);
+      toggleDoble.appendChild(document.createTextNode('Doble meta'));
+
+      contenedor.appendChild(toggleDoble);
+
+      // Campos de cantidad
+      const cantidadInputs = [];
+      for (let k = 0; k < 5; k++) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = 0;
+        cantidadInputs.push(input);
+        contenedor.appendChild(input);
+      }
+
+      // Texto resultado
+      const faltanteText = document.createElement('div');
+      faltanteText.className = 'faltante';
+      contenedor.appendChild(faltanteText);
+
+      function actualizar() {
+        const factor = checkbox.checked ? 2 : 1;
+        contenedor.dataset.doble = factor;
+        contenedor.classList.toggle('doble', checkbox.checked);
+
+        const metaGlobal = parseFloat(metaGlobalInput.value) || 0;
+        const metaLocal = metaGlobal * factor;
+
+        let suma = 0;
+        for (let input of cantidadInputs) {
+          let val = parseFloat(input.value) || 0;
+          suma += val;
+        }
+
+        // Limitar si excede
+        if (suma > metaLocal) {
+          let exceso = suma - metaLocal;
+          for (let i = cantidadInputs.length - 1; i >= 0; i--) {
+            let val = parseFloat(cantidadInputs[i].value) || 0;
+            if (val >= exceso) {
+              cantidadInputs[i].value = (val - exceso).toFixed(2);
+              break;
+            } else {
+              exceso -= val;
+              cantidadInputs[i].value = 0;
+            }
+          }
+          return actualizar();
+        }
+
+        const faltan = metaLocal - suma;
+        if (faltan === 0) {
+          faltanteText.textContent = '¡Meta alcanzada!';
+          faltanteText.className = 'faltante ok';
+        } else {
+          faltanteText.textContent = `Faltan ${faltan.toFixed(2)}`;
+          faltanteText.className = 'faltante';
+        }
+      }
+
+      // Eventos
+      checkbox.addEventListener('change', actualizar);
+      metaGlobalInput.addEventListener('input', actualizar);
+      cantidadInputs.forEach(inp => inp.addEventListener('input', actualizar));
+
+      actualizar();
+      return contenedor;
+    }
+
+    // Generar 20 cuadros (4x5)
+    for (let i = 0; i < filas; i++) {
+      const tr = document.createElement('tr');
+      for (let j = 0; j < columnas; j++) {
+        const td = document.createElement('td');
+        const cuadro = crearCuadro();
+        td.appendChild(cuadro);
+        tr.appendChild(td);
+      }
+      grid.appendChild(tr);
+    }
+  </script>
+
+</body>
+</html>
